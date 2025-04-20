@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Region (Polygon)</title>
+    <style>
+        #image-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        #pdf-image {
+            display: block;
+        }
+
+        #selection-canvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+            pointer-events: none;
+        }
+
+        .button-row {
+            margin-top: 1em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Draw a polygon over the PDF</h1>
+
+    <div id="image-container">
+        <img id="pdf-image" src="{{ image_url }}">
+        <canvas id="selection-canvas"></canvas>
+    </div>
+
+    <form method="post" action="/extract_region">
+        <input type="hidden" name="polygon" id="polygon-coords">
+        <input type="hidden" name="page" value="{{ page }}">
+        <div class="button-row">
+            <button type="button" onclick="resetPolygon()">Reset Polygon</button>
+            <button type="submit">Extract Text from Selected Polygon</button>
+        </div>
+    </form>
+
+    <div>
+        {% if page > 0 %}
+            <a href="/select_region?page={{ page - 1 }}">← Previous Page</a>
+        {% endif %}
+        {% if page + 1 < total_pages %}
+            <a href="/select_region?page={{ page + 1 }}">Next Page →</a>
+        {% endif %}
+    </div>
+
+    <p><a href="/">Upload another PDF</a></p>
+
+    <script>
+        const image = document.getElementById('pdf-image');
+        const canvas = document.getElementById('selection-canvas');
+        const ctx = canvas.getContext('2d');
+        const polygonInput = document.getElementById('polygon-coords');
+
+        let polygon = [];
+
+        // Set canvas size to match image after it loads
+        image.onload = () => {
+            canvas.width = image.clientWidth;
+            canvas.height = image.clientHeight;
+        };
+
+        image.addEventListener('click', (e) => {
+            const rect = image.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            polygon.push({ x, y });
+            drawPolygon();
+        });
+
+        function drawPolygon() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (polygon.length === 0) return;
+
+            ctx.strokeStyle = '#007BFF';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(polygon[0].x, polygon[0].y);
+            for (let i = 1; i < polygon.length; i++) {
+                ctx.lineTo(polygon[i].x, polygon[i].y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+
+            // Draw points
+            polygon.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 4, 0, 2 * Math.PI);
+                ctx.fillStyle = '#007BFF';
+                ctx.fill();
+            });
+
+            // Store coords in form input as JSON string
+            polygonInput.value = JSON.stringify(polygon);
+        }
+
+        function resetPolygon() {
+            polygon = [];
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            polygonInput.value = '';
+        }
+    </script>
+</body>
+</html>

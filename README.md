@@ -13,3 +13,6 @@ hello my name is Richard Rost but I go by "Rj" for short, Im a junior at Morning
 I am on the Morningside Esports Valorant team
 some of my hobbies are playing games and fashion I almost went to fashion school instead of cs, but decided not to.
 I like to push myself when it comes to computer science and learn new things as I go along. so this project will keep me motivated to improve upon my skills. 
+
+
+make sure you download all requirements Pillow, numpy, Flask, Tesseract-OCR, and opencv there may be more 

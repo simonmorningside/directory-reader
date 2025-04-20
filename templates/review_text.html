@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Review Extracted Text</title>
+</head>
+<body>
+    <h1>Review & Edit Extracted Text</h1>
+    <h2>Raw Text:</h2>
+    <div>{{ raw_text_html|safe }}</div>
+    <form method="post" action="/finalize_text">
+        <textarea name="final_text" rows="20" cols="100">{{ text }}</textarea>
+        <br><br>
+        <button type="submit">Finalize Text</button>
+    </form>
+    <h3>Preprocessed Image Preview</h3>
+{% if processed_image_url %}
+    <img src="{{ processed_image_url }}" style="max-width: 100%; border: 1px solid #ccc;">
+{% endif %}
+<hr>
+<h3>Extracted Text Preview</h3>
+<div>{{ text|safe }}</div>
+    <p><a href="/">Upload another PDF</a></p>
+</body>
+</html>

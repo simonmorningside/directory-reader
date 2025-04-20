@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Extracted Data</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-family: sans-serif;
+        }
+        th, td {
+            padding: 6px;
+            border: 1px solid #999;
+        }
+        input {
+            width: 100%;
+            border: none;
+            padding: 4px;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <h2>Edit Name & Address Entries</h2>
+    <form action="/save_csv" method="post">
+        <table>
+            <tr><th>Name</th><th>Address</th></tr>
+            {% for entry in entries %}
+            <tr>
+                <td><input type="text" name="name" value="{{ entry.name }}"></td>
+                <td><input type="text" name="address" value="{{ entry.address }}"></td>
+            </tr>
+            {% endfor %}
+        </table>
+        <br>
+        <p><a href="/">Upload another PDF</a></p>
+        <button type="submit">Download as CSV</button>
+    </form>
+</body>
+</html>
