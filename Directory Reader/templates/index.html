@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF OCR</title>
+    <style>
+        canvas { border: 1px solid #000; }
+        #preview { margin-top: 20px; }
+        .input-box { width: 100px; margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Upload PDF and Select OCR Area</h1>
+    
+    <form action="/" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept="application/pdf">
+        <button type="submit">Upload PDF</button>
+    </form>
+
+    {% if base64_images %}
+        <h2>Select OCR Area on Test Pages</h2>
+
+        <div id="preview">
+            <h3>Page 1</h3>
+            <canvas id="canvas1" width="800" height="1000"></canvas>
+            <h3>Page 2</h3>
+            <canvas id="canvas2" width="800" height="1000"></canvas>
+        </div>
+
+        <h3>Specify OCR Scan Area (in pixels)</h3>
+        <label for="x">X:</label>
+        <input type="number" id="x" class="input-box" value="0">
+        <label for="y">Y:</label>
+        <input type="number" id="y" class="input-box" value="0">
+        <label for="width">Width:</label>
+        <input type="number" id="width" class="input-box" value="200">
+        <label for="height">Height:</label>
+        <input type="number" id="height" class="input-box" value="200">
+
+        <button id="process-btn">Process OCR</button>
+    {% endif %}
+
+    <script>
+        const base64Images = {{ base64_images|tojson }};
+        
+        let selectedRegion = { x: 0, y: 0, width: 200, height: 200 };
+        let canvas1 = document.getElementById("canvas1");
+        let canvas2 = document.getElementById("canvas2");
+        let ctx1 = canvas1.getContext("2d");
+        let ctx2 = canvas2.getContext("2d");
+
+        // Handling multiple images (Page 1 and Page 2)
+        let img1 = new Image();
+        img1.src = "data:image/png;base64," + base64Images[0];  // Page 1 Base64
+        img1.onload = () => {
+            ctx1.drawImage(img1, 0, 0, 800, 1000);
+            highlightArea(ctx1);  // Highlight the initial area
+        }
+
+        let img2 = new Image();
+        img2.src = "data:image/png;base64," + base64Images[1];  // Page 2 Base64
+        img2.onload = () => {
+            ctx2.drawImage(img2, 0, 0, 800, 1000);
+            highlightArea(ctx2);  // Highlight the initial area
+        }
+
+        // Function to highlight the selected area
+        function highlightArea(ctx) {
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(selectedRegion.x, selectedRegion.y, selectedRegion.width, selectedRegion.height);
+        }
+
+        // Update the selected area when user types in the input boxes
+        function updateRegion() {
+            selectedRegion.x = parseInt(document.getElementById('x').value) || 0;
+            selectedRegion.y = parseInt(document.getElementById('y').value) || 0;
+            selectedRegion.width = parseInt(document.getElementById('width').value) || 200;
+            selectedRegion.height = parseInt(document.getElementById('height').value) || 200;
+
+            // Redraw the highlighted area on both canvases
+            ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
+            ctx1.drawImage(img1, 0, 0, 800, 1000);
+            highlightArea(ctx1);
+
+            ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+            ctx2.drawImage(img2, 0, 0, 800, 1000);
+            highlightArea(ctx2);
+        }
+
+        // Attach event listeners to the input boxes
+        document.getElementById('x').addEventListener('input', updateRegion);
+        document.getElementById('y').addEventListener('input', updateRegion);
+        document.getElementById('width').addEventListener('input', updateRegion);
+        document.getElementById('height').addEventListener('input', updateRegion);
+
+        // Process the PDF after the user specifies the region
+        document.getElementById('process-btn').addEventListener('click', () => {
+            fetch('/process', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    x: selectedRegion.x,
+                    y: selectedRegion.y,
+                    width: selectedRegion.width,
+                    height: selectedRegion.height,
+                    file_path: "/uploads/{{ base64_images[0] }}" // Correct this if necessary
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Extracted Text: ' + data.text);
+            });
+        });
+    </script>
+</body>
+</html>
